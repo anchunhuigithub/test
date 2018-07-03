@@ -23,6 +23,6 @@ echo ${my_variable}
 unset my_variable 使用unset进行取消时不要使用$符号。
 echo ${my_variable}
 关于何时使用$何时不使用$ 小窍门：只需记住一点，如果要用到变量就使用$,如果操作变量不使用$.这条规制的列外是使用printenv 显示某个变量的值。
-printenv ${my_variable}
+printenv my_variable
 +++++++++++++++++++++++++
 
