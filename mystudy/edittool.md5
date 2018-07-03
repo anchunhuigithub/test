@@ -1,0 +1,33 @@
+		EditTool Study
+1 vim
+	vim  ====> vi improved
+2 vim 基础
+	readlink -f /usr/bin/vi
+	查看最终的依赖
+	vim xx
+	在普通模式下 使用hjkl 进行移动光标 分别为作，下，上，右。
+	pagedown (c+f) 向下藩屏
+	pageup (c+b) 下上藩屏
+	G 移动到缓冲区的最后一行
+	num G 移动到缓冲去的第num行
+	gg 移动到缓冲区的第一行
+	在普通模式下有一个命令行模式，输入:可以输入命令控制vim行为
+	输入q 如果为修改缓冲区内容，退出
+	输入q! 取消对缓冲区内容的修改，退出
+	输入w filename 将文件保存到另外一个文件中
+	wg 将缓冲去内容保存到文件，退出
+	在普通模式下：常见命令
+	x 删除但前光标所在位置字符
+	dd 删除当前光标所在行
+	dw 删除当前光标所在单词
+	d$ 删除当前光标所在位置至行尾的内容
+	J 删除当前光标所在行行尾的换行符
+	u 撤销前一编辑命令
+	a 在当前光标后添加数据
+	A 在当前光标所在行行尾添加数据
+	r char 用char 替换当前光标所在位置的单个字符
+	R text 用text覆盖当前光标所在位置的数据，知道按下ESC键
+	
+
+	test of vigogogoogogogoogogogoogogogoogogogogogoogo
+	go whth me go go go 
