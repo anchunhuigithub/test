@@ -1,0 +1,5 @@
+全局环境变量的设置
+首先设定一个局部变量然后使用export 命令导出到全局环境当中
+my_variable="hello world"
+export my_variable
+全局环境变量可以在本shell和本shell的子shell中使用
