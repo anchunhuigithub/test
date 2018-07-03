@@ -1,7 +1,20 @@
-定义的全局变量在子shell中也可用，全局变量的取名用户自定义的都是小写，避免和系统的全局变量发生冲突。
-在子shell中可以对这个全局变量进行更改但是对父shell中的全局变量没有影响。
-my_test_variable="glable variable"
-export my_test_variable
+		environment variable include 全局变量和局部变量。
+	说明：bash shell 使用一致的环境变量，但是不同的linux发行版本经常添加自己的环境变量。
+1.1 全局环境变量
+	全局环境变量对于shell会话和所有的生成的子shell都是可见的。局部环境变量只对创建他们的shell可见。系统环境变量基本都是大写字母区别普通用户创建的环境变量，
+	查看全局环境变量使用 env或printenv，系统为bash shell设置了很多环境变量，很多是在登陆过程中设置的，另外，登陆方式也会影响到创建所设置的环境变量。
+	要显示个别的环境变量使用printenv 变量名称 不要使用env
+	也可以使用echo echo ${HOME} 在echo命令中，在变量名前加上$ 可以显示变量当前的值，可以让变量作为命令行参数。
+1.2 局部环境变量
+	局部环境变量只能在定义他们的shell中可用，set命令可以显示为某一个进程设置的所有的环境变量，包括局部，全局以及用户自定义的环境变量。
+	局部变量包括linux系统默认的标准的局部环境变量，用户自定义的局部变量。
+	env,printenv,set 区别：set显示所有的变量，包括全局，局部，用户自定义变量，并且按照字母顺序对结果进行排序。env和printenv命令同set命令区别，前两者不会对变量进行排序，也不会输出局部和用户自定义变量。env有一个printenv没有的功能。
+2.1 设置用户自定义的变量
+2.1.1 设置用户的局部变量
+	在子shell中可以对这个全局变量进行更改但是对父shell中的全局变量没有影响。
+	my_test_variable="glable variable"
+2.1.2 设置全局变量
+	export my_test_variable
 bash
 echo ${my_test_variable}
 glable variable
@@ -17,12 +30,26 @@ glable variable
 在子shell 中删除了一个全局变量只对子shell作用，对父亲shell没有影响。
 和修改全局变量一样在子shell中做的修改对父亲shell没有作用。
 +++++++++++++++++++++++
-既然可以添加全局变量那么对应的就可以取消全局变量
-使用unset命令进行取消这个全局变量。
-echo ${my_variable}
+2.1.3 取消环境变量
+	使用unset命令进行取消这个全局变量。
 unset my_variable 使用unset进行取消时不要使用$符号。
 echo ${my_variable}
 关于何时使用$何时不使用$ 小窍门：只需记住一点，如果要用到变量就使用$,如果操作变量不使用$.这条规制的列外是使用printenv 显示某个变量的值。
 printenv my_variable
 +++++++++++++++++++++++++
+2.1.4 设置PATH 环境变量
+	类似于windows的PATH环境变量
+	比如java的环境变量的设置。查看PATH环境变量内容echo ${PATH}
+	如果命令或者程序的位置没有包括在PATH环境变量中，那么必须使用绝对路径才能使用，应用程序放置可执行文件的目录常常不再PATH包含的目录中，解决的方法是保证PATH环境变量包含了所有存放应用程序的目录。
+	添加目录到PATH 比如：PATH=${PATH}:/home/an/xxx
+	这样做的话相当于用户自定义了PATH 为局部环境变量覆盖了全局变量，如果想让子shell看到新添加到PATH中的路径的话，需要export PATH 把PATH 设置到全局环境变量的高度。
+	对PATH变量的修改只能持续到退出或者是重启系统，不能持久保持修改后的效果。
+2.1.5 定位系统环境变量
+	当你登陆 linux 启动一个bash shell的时候默认情况下 bash会在几个文件中查找命令，这些文件叫做启动文件或者是环境文件，bash检查的文件取决于你启动shell的方式，启动bash shell有三中方式
+	登陆时作为默认登陆shell
+	作为非登陆shell的交互式shell
+	作为运行脚本的非交互式shell
+2.1.6 
+
+
 
