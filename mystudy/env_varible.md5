@@ -49,7 +49,38 @@ printenv my_variable
 	登陆时作为默认登陆shell
 	作为非登陆shell的交互式shell
 	作为运行脚本的非交互式shell
-2.1.6 
-
-
-
+2.1.6 登陆shell
+	当登陆linux时，bash shell会作为登陆shell启动。登陆shell会从5个不同的启动文件里读取命令：
+	/etc/profile
+	/$HOME/.bash_profile
+	/$HOME/.bashrc
+	/$HOME/.bash_login
+	/$HOME/.profile
+	/etc/profile 是系统上默认的bash shell的主启动文件。系统上的每个用户登陆时都会执行这个启动文件。
+	另外四个是针对用户的，可以根据个人需求定制。
+	剩下的四个文件都是为了提供一个用户专属的启动文件来定义该用户所用到的环境变量。大多数linux发行版本只用了其中的一两个。他们位于每一个用户的家目录，用户可以编辑这些文件添加自己的环境变量，这些环境变量在每次启动shell会话时生效。
+	shell按照一定的顺序进行运行文件，一旦找到第一个文件，其他文件就被忽略
+	$HOME/.bash_profile
+	$HOME/.bash_login
+	$HOME/.profile
+2.1.7 交互式shell
+	如果你的bash shell不是在登陆时启动的(比如是在命令行提示符下输入bash启动的)，那么你启动的shell叫做交互式shell。交互式shell不会像登陆shell一样运行，但它依然提供了命令行提示符来输入命令。
+	如果bash是作为交互式shell启动的，那么它不会访问/etc/profile文件，只会访问/$HOME/.bashrc 文件。
+2.1.8 非交互式shell
+	系统执行shell脚本时用的就是这种shell。
+	脚本可以以不同的方式运行，只有其中的某一些方式可以启动子shell。
+	当在系统生运行shell脚本时，希望运行一些特定的启动命令，bash shell 提供了BASH_SHELL 环境变量，当shell启动一个非交互式shell进程时，它会检查这个环境变量来查看要执行的启动文件。如果有指定的文件，shell会执行该文件里的命令，这通常包括shell脚本变量设置。
+	启动子shell进程执行shell脚本的话继承了父亲shell的环境变量，没有启动子shell进程的可以访问当前进程的局部和全局环境变量。
+2.1.9 环境变量持久化
+	对于全局环境变量可以放到/etc/profile文件中，但是这不是最好的，如果升级了所用的linux发行版本，那么所设定的环境变量就消失了。
+	最好时在/etc/profile.d 目录下创建一个以.sh结尾的文件，把新的和更改过的全局变量放到这里面。
+	大多数linux发行版本中存储用户永久性bash shell变量的地方时$HOME/.bashrc 文件，这一点适用于所有类型的shell进程。如果设置了BASH_ENV 变量，那么记住，除非它指向的使$HOME/.bashrc,否则你应该将非交互式shell的用户变量放在别的地方。
+2.1.9 数组变量
+	要给某个环境变量设置多个值，可以把值放到括号里，值与值之间使用空格隔开。
+	my_test=(one two three)
+	echo ${my_test[0])。下表从0开始。
+	echo ${#my_test[*]} 显示数组中的元素个数。
+	echo ${my_test[*]}  显示数组中的所有元素。
+	可以使用unset删除数组中的某一个元素。
+	unset my_test[0] 
+	使用unset my_test 可以删除整个数组。
