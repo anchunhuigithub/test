@@ -1,2 +1,4 @@
 #!/bin/bash
 echo `date`
+date_now=`date +"%Y-%m-d %H:%M%S"`
+echo $date_now
