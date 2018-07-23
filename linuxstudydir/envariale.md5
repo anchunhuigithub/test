@@ -3,3 +3,22 @@
 my_variable="hello world"
 export my_variable
 全局环境变量可以在本shell和本shell的子shell中使用
+编写的shell脚本直接执行和放到crontab定时任务中执行的结果不一样的处理方式
+  添加一下两行代码到shell脚本中 
+  . /etc/profile                                                                                                                  
+  . ~/.bash_profile
+阿里云服务器邮箱设置
+  SMTP发送邮件  记得打开阿里云服务器的465端口
+  更改/etc/mail.rc文件
+  ####################
+  set smtp="smtps://smtp.mxhichina.com:465"                                                                               
+  set smtp-auth=login                                                                                                     
+  set smtp-auth-user="anchunhui@iqupin.cn"                                                                                
+  set smtp-auth-password="mima"                                                                               
+  set ssl-verify=ignore                                                                                                   
+  set nss-config-dir=/etc/pki/nssdb
+  ####################
+  测试邮件发送
+  echo "Always believe the world will be better" | mail -v -r "anchunhui@iqupin.cn" -s "subject" ANCHUNHUI_QI@163.com
+配置hadoop大数据平台报警系统.
+  打开报警功能，设置报警为smtps 加密方式发送，设置163 smtp地址。
