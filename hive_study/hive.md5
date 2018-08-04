@@ -1,0 +1,7 @@
+hive study file
+1,version 1
+	set hive.cli.print.current.db=true  设置出 cli的db名称
+	set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
+	create database;      创建数据库
+	create table;      创建表
+
