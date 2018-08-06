@@ -7,3 +7,8 @@ hive study file
 	
 # 把一个查询结果作为插入的内如插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
 insert  overwrite/into table_target select * from table_src;
+# 使用group by 进行嵌套查询 需要在后面添加as tablealis 不然会报错 这是在mysql的语法 
+select count(1) from (select _from from table group by _from) as t;
+select count(distinct(1)) from table;
+# 在hive中的使用 的性能比较
+
