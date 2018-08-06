@@ -4,4 +4,6 @@ hive study file
 	set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
 	create database;      创建数据库
 	create table;      创建表
-
+	
+# 把一个查询结果作为插入的内如插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
+insert  overwrite/into table_target select * from table_src;
