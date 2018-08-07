@@ -12,3 +12,159 @@ select count(1) from (select _from from table group by _from) as t;
 select count(distinct(1)) from table;
 # 在hive中的使用 的性能比较
 
+
+
+
+
+#       hive 中array，map，struct字段类型的使用场景
+	1，array
+	        以电影数据为列
+		数据维度
+		导演，编剧，类型，主演，year，month，市场，score
+		其中导演，编剧，类型和主演为array类型的
+		创建表
+		create table movie_message(
+		    id int,
+		    title string,
+		    daoyan array<string>,
+		    bianju array<string>,
+		    leixing array<string>,
+		    zhuyan array<string>,
+		    year int,
+	  	    month int,
+	            shichang int,
+	            disnum int,
+	            score float
+		)
+		comment "this table about movie's message"
+		row format delimited fields terminated by ","
+		collection items terminated by '/';
+          加载本地数据：
+	  load data local inpath "/home/master/mycode/new_movies_load.csv" into table movie_message;
+	  内嵌查询及统计：
+          select lx,count(*) from movie_message lateral view explode(leixing) leixing as lx group by lx;
+		结果：
+		        传记    194
+		        儿童    18
+			冒险    242
+			剧情    1490
+			动作    252
+			动画    106
+			历史    208
+			古装    9
+			同性    84
+			喜剧    618
+			奇幻    178
+			家庭    130
+			恐怖    152
+			悬念    2
+			悬疑    386
+
+	保存结果到本地文件:
+	insert overwrite local directory "/home/master/mycode/movie_leixing"
+	row format delimited fields terminated by "\t"
+	select lx,count(*) from movie_message lateral view explode(leixing) leixing as lx group by lx;
+
+	2,map
+	场景：
+	create table people_movie(
+		 name string,
+		 movie map<string,string> )
+		 row format delimited fields terminated by "\t"
+		 collection items terminated by ","
+		 map keys terminated by ":";
+	加载数据：
+		load data local inpath "/home/master/map" into table people_movie;
+
+	hive> select * from people_movie;
+	OK
+	A       {"ABC":"2016-05","EFG":"2016-09"}
+	B       {"OPQ":"2015-06","XYZ":"2016-04"}
+	A       {"ABC":"2016-05","EFG":"2016-09"}
+	B       {"OPQ":"2015-06","XYZ":"2016-04"}
+	Time taken: 0.148 seconds, Fetched: 4 row(s)
+	hive> select movie['ABC'] from people_movie;
+	OK
+	2016-05
+	NULL
+	2016-05
+	NULL
+	使用explode关键字进行查询
+	hive> select explode(movie) as (m_name,m_time) from people_movie;
+	OK
+	ABC     2016-05
+	EFG     2016-09
+	OPQ     2015-06
+	XYZ     2016-04
+	ABC     2016-05
+	EFG     2016-09
+	OPQ     2015-06
+	XYZ     2016-04
+	使用explode和lateral view 结合查询
+	hive> select name,mo,time from people_movie lateral view explode(movie) movie as mo,time;
+	A       ABC     2016-05
+	A       EFG     2016-09
+	B       OPQ     2015-06
+	B       XYZ     2016-04
+	A       ABC     2016-05
+	A       EFG     2016-09
+	B       OPQ     2015-06
+	B       XYZ     2016-04
+	
+	3，Structs
+	类似于C语言中的结构体，内部数据通过X.X来获取，假设我们的数据格式是这样的，电影ABC，有1254人评价过，打分为7.4分
+	ABC     1254:7.4
+	DEF     256:4.9
+	XYZ     456:5.4
+	
+	创建表：
+	create table movie_score(
+    	> name string,
+    	> info struct<number:int,score:float>)row format delimited fields terminated by "\t"
+   	> collection items terminated by ":";
+
+
+	hive> select * from movie_score;
+	ABC     {"number":1254,"score":7.4}
+	DEF     {"number":256,"score":4.9}
+	XYZ     {"number":456,"score":5.4}
+	hive> select info.number,info.score from movie_score;
+	1254    7.4
+	256     4.9
+	456     5.4
+
+	4，collect_set函数
+        该函数的作用是将某字段的值进行去重汇总，产生Array类型字段
+		
+		select * from test;
+
+		1       A
+		1       C
+		1       B
+		2       B
+		2       C
+		2       D
+		3       B
+		3       C
+		3	d
+	
+	 select id,collect_set(name) from test group by id;
+	  
+	  1       ["A","C","B"]
+	  2       ["B","C","D"]
+	  3       ["B","C","D"]
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
