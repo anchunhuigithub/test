@@ -1,22 +1,56 @@
                                                        hive study file
 1,version 1
     常用命令: 
-    set hive.cli.print.current.db=true  设置出 cli的db名称
-	set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
-	create database databasename;      创建数据库
-	create table tablename (filename type,filename1 type)j;      创建表
+        set hive.cli.print.current.db=true  设置出 cli的db名称
+        set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
+        create database databasename;      创建数据库
+        create table tablename (filename type,filename1 type)j;      创建表
+    显示分区: 
+        show partitions tablename;
+    添加分区: 
+        alter table tablename add [if not exists] partition partition_1 [location 'location'] partition partition_2 ['location'] ...;
+        example:
+        ALTER TABLE iteblog ADD PARTITION (dt='2008-08-08', country='us') location '/path/to/us/part080808'
+        PARTITION (dt='2008-08-09', country='us') location '/path/to/us/part080809';
+    删除分区: 
+        alter table table_name drop [if exists] partition partition_spec[,paritiont]
+        example:
+        ALTER TABLE iteblog DROP PARTITION (dt='2008-08-08', country='us');
+    修改分区: 
+        ALTER TABLE iteblog PARTITION (dt='2008-08-08') SET LOCATION "new location"; 更改数据路径, 原始数据并没有删除. 
+        ALTER TABLE iteblog PARTITION (dt='2008-08-08') RENAME TO PARTITION (dt='20080808');
+    添加列: 
+        ALTER TABLE iteblog ADD COLUMNS (col_name STRING);
+    修改列: 
+            CREATE TABLE iteblog (a int, b int, c int);
+             
+            // will change column a's name to a1
+            ALTER TABLE iteblog CHANGE a a1 INT; 
+             
+            // will change column a's name to a1, a's data type to string, and put it after column b. The new table's structure is: b int, a1 string, c int
+            ALTER TABLE iteblog CHANGE a a1 STRING AFTER b; 
+             
+            // will change column b's name to b1, and put it as the first column. The new table's structure is: b1 int, a string, c int
+            ALTER TABLE iteblog CHANGE b b1 INT FIRST; 
 
-命令1:
-# 把一个查询结果作为插入的内容插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
-     insert  overwrite/into table_target select * from table_src;
-# 创建表的同时直接插入查询结果, 应用场景, 查询结果过多, 不进行控制台打印直接插入到表里去
-     create table table_1 as select * from table_2 where table_2.age>20
 
-# 使用group by 进行嵌套查询 需要在后面添加as tablealis 不然会报错 这是在mysql的语法 
-     select count(1) from (select _from from table group by _from) as t;
-     select count(distinct(1)) from table;
+            命令1:
+            # 把一个查询结果作为插入的内容插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
+                 insert  overwrite/into table_target select * from table_src;
+            # 创建表的同时直接插入查询结果, 应用场景, 查询结果过多, 不进行控制台打印直接插入到表里去
+                 create table table_1 as select * from table_2 where table_2.age>20
 
-# 在hive中的使用 的性能比较
+            # 使用group by 进行嵌套查询 需要在后面添加as tablealis 不然会报错 这是在mysql的语法 
+                 select count(1) from (select _from from table group by _from) as t;
+                 select count(distinct(1)) from table;
+
+            # 在hive中的使用 的性能比较
+    修改表属性: 
+        alter table iteblog set TBLPROPERTIES ('EXTERNAL'='TRUE');
+        alter table iteblog set TBLPROPERTIES ('EXTERNAL'='FALSE');
+  
+    表的重新命名: 
+       ALTER TABLE iteblog RENAME TO new_table_name
 
 命令2:
 # 动态分区和静态分区
