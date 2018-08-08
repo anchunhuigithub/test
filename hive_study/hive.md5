@@ -1,10 +1,10 @@
-hive study file
+                                                       hive study file
 1,version 1
     常用命令: 
     set hive.cli.print.current.db=true  设置出 cli的db名称
 	set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
-	create database;      创建数据库
-	create table;      创建表
+	create database databasename;      创建数据库
+	create table tablename (filename type,filename1 type)j;      创建表
 
 命令1:
 # 把一个查询结果作为插入的内容插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
@@ -215,9 +215,54 @@ hive study file
     
     distribute by
     按照指定的字段将数据划分到不同的reduce中, 可以保证每个reduce中的数据范围不重叠, 每个分区内的数据是没有排序的.
-
     
+    cluster by 具有distribute by 的功能, 并且可以在reduce中进行排序, 每个reduce内的数据是有序的, 可以达到全局有序的结果
+********************************************************************************hive 中reduces个数是如何计算的************************
+    参考文献: https://www.iteblog.com/archives/1697.html
+ 
+ hive.exec.reducers.bytes.per.reducer
+ 此参数从Hive 0.2.0开始引入。在Hive 0.14.0版本之前默认值是1G(1,000,000,000)；而从Hive 0.14.0开始，默认值变成了256M(256,000,000)，
+ 可以参见HIVE-7158和HIVE-7917。这个参数的含义是每个Reduce处理的字节数。比如输入文件的大小是1GB，那么会启动4个Reduce来处理数据 
+ 
+ hive.exec.reducers.max 指定最多启动的reducer的个数
+    此参数从Hive 0.2.0开始引入。在Hive 0.14.0版本之前默认值是999；而从Hive 0.14.0开始，默认值变成了1009；可以参见HIVE-7158和HIVE-7917。
+    这个参数的含义是最多启动的Reduce个数。比如input size/hive.exec.reducers.bytes.per.reducer>hive.exec.reducers.max，
+    那么Hive启动的Reduce个数为hive.exec.reducers.max；反之为input size/hive.exec.reducers.bytes.per.reducer。
+    这个参数只有在mapred.reduce.tasks/mapreduce.job.reduces设置为负数的时候才有效
+ 
+ mapred.reduce.tasks/mapreduce.job.reduces
+    此参数从Hive 0.1.0开始引入。默认值是-1。此参数的含义是Reduce的个数，典型的情况是设置成接近可用节点的质数。
+    如果mapred.job.tracker的值是local此参数将会被忽略。在Hadoop中此参数的默认值是1；而在Hive中默认值是-1。
+    通过将此参数设置为-1，Hive将自动计算出应该启动多少个Reduce。
+
+ 计算reduce个数的代码片段: 
+    double bytes = Math.max(totalInputFileSize, bytesPerReducer); 
+    int reducers = (int) Math.ceil(bytes / bytesPerReducer);
+    reducers = Math.max(1, reducers);
+    reducers = Math.min(maxReducers, reducers);   
+ reduce 最小为1, 最大为maxReduces 就是hive.exec.reducers.max的值
+    上面的代码仅仅是根据输入计算出reduce的个数, 最终的设置是通过设置setNumberOfReducers函数决定的
+    如果job.getNumReduceTasks()>0，也就是mapred.reduce.tasks/mapreduce.job.reduces参数的值大于0，
+    此时直接取mapred.reduce.tasks/mapreduce.job.reduces的值作为Reduce的个数；
+    否则将会使用上面estimateNumberOfReducers函数估算Reduce个数，
+    最后都是通过rWork.setNumReduceTasks(reducers)设置Reduce的个数。
+总结: 
+    1、Reduce的个数对整个作业的运行性能有很大影响。如果Reduce设置的过大，那么将会产生很多小文件，对NameNode会产生一定的影响，
+       而且整个作业的运行时间未必会减少；如果Reduce设置的过小，那么单个Reduce处理的数据将会加大，很可能会引起OOM异常。
+　　2、如果设置了mapred.reduce.tasks/mapreduce.job.reduces参数，那么Hive会直接使用它的值作为Reduce的个数；
+　　3、如果mapred.reduce.tasks/mapreduce.job.reduces的值没有设置（也就是-1），那么Hive会根据输入文件的大小估算出Reduce的个数。
+       根据输入文件估算Reduce的个数可能未必很准确，因为Reduce的输入是Map的输出，而Map的输出可能会比输入要小，所以最准确的数根据Map的输出估算Reduce的个数。
 
 
-    
+
+
+
+
+
+
+
+
+
+
+
 
