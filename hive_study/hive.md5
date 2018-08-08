@@ -9,9 +9,13 @@ hive study file
 命令1:
 # 把一个查询结果作为插入的内容插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
      insert  overwrite/into table_target select * from table_src;
+# 创建表的同时直接插入查询结果, 应用场景, 查询结果过多, 不进行控制台打印直接插入到表里去
+     create table table_1 as select * from table_2 where table_2.age>20
+
 # 使用group by 进行嵌套查询 需要在后面添加as tablealis 不然会报错 这是在mysql的语法 
      select count(1) from (select _from from table group by _from) as t;
      select count(distinct(1)) from table;
+
 # 在hive中的使用 的性能比较
 
 命令2:
@@ -24,6 +28,7 @@ hive study file
     select * where year=2018 and month=08 and day =08
     insert into table table2 partition (year=2018,month=08,day=09)
     select * where year=2018 and month=08 and day=09
+   
    动态分区:
    动态分区默认是关闭的, 需要手动打开 容许动态分区, 容许所有列作为动态分区字段. hive.exec.dynamic.partition.mode 设置为nostrict
    根据字段自动创建分区,根据查询结果的后三位进行动态分区. 
@@ -34,6 +39,7 @@ hive study file
    select name,age,year,month,day
    insert into table table3 partition (year=2018,month=08,day)
    select name,age,year,month,day where table1.year=2018,month=08
+
 命令3:
    join 操作
    inner join 内连接, 只用两张表都符合where条件才会作为结果显示 ,join 只支持等值连接 on后面的条件使用'=’
