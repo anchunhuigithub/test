@@ -1,9 +1,11 @@
 hive study file
 1,version 1
-	set hive.cli.print.current.db=true  设置出 cli的db名称
+    常用命令: 
+    set hive.cli.print.current.db=true  设置出 cli的db名称
 	set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
 	create database;      创建数据库
 	create table;      创建表
+
 命令1:
 # 把一个查询结果作为插入的内容插入到一张表里去 over 表示覆盖(先清空表，再插入)，into 表示直接插入。
      insert  overwrite/into table_target select * from table_src;
@@ -11,6 +13,7 @@ hive study file
      select count(1) from (select _from from table group by _from) as t;
      select count(distinct(1)) from table;
 # 在hive中的使用 的性能比较
+
 命令2:
 # 动态分区和静态分区
    静态分区:  一次导入到一个分区, 如果对应文件夹没有创建, 自动创建. 
@@ -22,6 +25,7 @@ hive study file
     insert into table table2 partition (year=2018,month=08,day=09)
     select * where year=2018 and month=08 and day=09
    动态分区:
+   动态分区默认是关闭的, 需要手动打开 容许动态分区, 容许所有列作为动态分区字段. hive.exec.dynamic.partition.mode 设置为nostrict
    根据字段自动创建分区,根据查询结果的后三位进行动态分区. 
    insert into table table2 partition(year,month,day) select * from t3.name,t3.age,.....,t3.year,t3.mohth,t3.day from table3 t3
    动态分区一次插入多张表中 from 字段放到前面可以插入到多张表中:  动态分区和静态分区结合使用 
@@ -30,6 +34,16 @@ hive study file
    select name,age,year,month,day
    insert into table table3 partition (year=2018,month=08,day)
    select name,age,year,month,day where table1.year=2018,month=08
+命令3:
+   join 操作
+   inner join 内连接, 只用两张表都符合where条件才会作为结果显示 ,join 只支持等值连接 on后面的条件使用'=’
+   select a.f1,a.f2,b.f2 from table1 a join table2 b on a.f1=b.f1
+   
+   *** 待定  todo
+   left outer join  左外连接  左边的表的记录符合where条件的都显示, 对应的右边的表
+
+
+
 
 
 
@@ -170,4 +184,17 @@ hive study file
 	  1       ["A","C","B"]
 	  2       ["B","C","D"]
 	  3       ["B","C","D"]
+********************************************************************************优化************************************************
+ 
+ 设置hive本地模式运行
+    set hive.exec.mode.local.auto=true
+    有些语句就不会促发mapreduce执行, 比如selct * from table1;  select * from table where day=10 (分区表)
+ 
+ 尽量使用group by 进行分组操作, 效率高
+ 
+ jvm重用
+
+
+
+
 
