@@ -234,6 +234,11 @@
  
  jvm重用
 
+ http://lxw1234.com/archives/2016/04/632.htm
+ orc 索引row group index vs bloom filter index
+ hive 的orc文件格式有着很高的压缩比, 还通过一个内置的轻量级索引, 提升查询性能, row group index 
+
+
 
 
 ********************************************************************************易混知识点****************************************
@@ -249,6 +254,8 @@
     
     distribute by
     按照指定的字段将数据划分到不同的reduce中, 可以保证每个reduce中的数据范围不重叠, 每个分区内的数据是没有排序的.
+    distribute by 一般和sort by一起使用: 进行reduce内部排序. 
+
     
     cluster by 具有distribute by 的功能, 并且可以在reduce中进行排序, 每个reduce内的数据是有序的, 可以达到全局有序的结果
 ********************************************************************************hive 中reduces个数是如何计算的************************
@@ -287,11 +294,91 @@
 　　3、如果mapred.reduce.tasks/mapreduce.job.reduces的值没有设置（也就是-1），那么Hive会根据输入文件的大小估算出Reduce的个数。
        根据输入文件估算Reduce的个数可能未必很准确，因为Reduce的输入是Map的输出，而Map的输出可能会比输入要小，所以最准确的数根据Map的输出估算Reduce的个数。
 
+**********************************************************************************hive 分析窗口函数***************************************
+   引用文献: http://lxw1234.com/archives/2015/04/181.htm  
+             http://lxw1234.com/archives/2015/04/176.htm window 子句: 
+    
+   数据的准备和下面的一样: 
+    SELECT cookieid,
+    createtime,
+    pv,
+    SUM(pv) OVER(PARTITION BY cookieid ORDER BY createtime) AS pv1, -- 默认为从起点到当前行
+    SUM(pv) OVER(PARTITION BY cookieid ORDER BY createtime ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS pv2, --从起点到当前行，结果同pv1 
+    SUM(pv) OVER(PARTITION BY cookieid) AS pv3,								--分组内所有行
+    SUM(pv) OVER(PARTITION BY cookieid ORDER BY createtime ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) AS pv4,   --当前行+往前3行
+    SUM(pv) OVER(PARTITION BY cookieid ORDER BY createtime ROWS BETWEEN 3 PRECEDING AND 1 FOLLOWING) AS pv5,    --当前行+往前3行+往后1行
+    SUM(pv) OVER(PARTITION BY cookieid ORDER BY createtime ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS pv6   ---当前行+往后所有行  
+    FROM lxw1234;
+     
+    cookieid createtime     pv      pv1     pv2     pv3     pv4     pv5      pv6 
+    -----------------------------------------------------------------------------
+    cookie1  2015-04-10      1       1       1       26      1       6       26
+    cookie1  2015-04-11      5       6       6       26      6       13      25
+    cookie1  2015-04-12      7       13      13      26      13      16      20
+    cookie1  2015-04-13      3       16      16      26      16      18      13
+    cookie1  2015-04-14      2       18      18      26      17      21      10
+    cookie1  2015-04-15      4       22      22      26      16      20      8
+    cookie1  2015-04-16      4       26      26      26      13      13      4
+    
+    如果不置顶rows between 那么默认从起点到当前行, 若果不指定order by 将分组内所有数据累加
+    理解rows between的含义为: 
+    preceding : 往前
+    following : 往后
+    current_row : 当前行
+    unbounded : 起点 unbounded preceding:  表示从前面的起点, unbounded following : 表示到后面的终点 
+    其它的AVG, min, max, 和sum的用法一样. 
 
 
 
-
-
+    ntile,row_number,rank,dense_rank
+    注意序列函数不支持window子句
+            cookie1,2015-04-10,1
+            cookie1,2015-04-11,5
+            cookie1,2015-04-12,7
+            cookie1,2015-04-13,3
+            cookie1,2015-04-14,2
+            cookie1,2015-04-15,4
+            cookie1,2015-04-16,4
+            cookie2,2015-04-10,2
+            cookie2,2015-04-11,3
+            cookie2,2015-04-12,5
+            cookie2,2015-04-13,6
+            cookie2,2015-04-14,3
+            cookie2,2015-04-15,9
+            cookie2,2015-04-16,7
+             
+            CREATE EXTERNAL TABLE lxw1234 (
+            cookieid string,
+            createtime string,   --day 
+            pv INT
+            ) ROW FORMAT DELIMITED 
+            FIELDS TERMINATED BY ',' 
+            stored as textfile location '/tmp/lxw11/';
+   ntile(n) 用于将分组数据按照顺序切分为n片, 返回当前切片值, ntile不支持rows between  
+   NTILE(2) OVER(PARTITION BY cookieid ORDER BY createtime ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)
+   统计一个cookie pv最多的前三分之一的天, 
+           select cookieid,createtime,pv,ntile(3) over(partition by cookieid order by pv desc) as rn from table;
+           嵌套一下: 只要每一个cookieid的前三天的数据
+        select * from (
+             select cookieid,createtimr,pv,ntile(3) over(partition by cookieid order by pv desc) as rn from table
+        )as tamp where tamp.rn=1;
+        结果为:
+        cookie1	2015-04-12	7	1
+        cookie1	2015-04-11	5	1
+        cookie1	2015-04-16	4	1
+        cookie2	2015-04-15	9	1
+        cookie2	2015-04-16	7	1
+        cookie2	2015-04-13	6	1
+   row_number() 从1开始, 按照顺序, 生成分组内记录的序列
+   比如按照pv进行倒叙排序, 生成每天的pv名次 即使排名相等也会有顺序 1, 2, 3, 4, 5
+        select cookieid,createtime,pv,row_number() over(partition by createtime order by pv desc) as rn from test1;
+        按照时间找到每天的pv最大的cookieid 的相关记录
+        select * from (select cookieid,createtime,pv,row_number() over(partition by createtime order by pv desc) as rn from test1) as tamp where tamp.rn=1;
+   rank() 生成数据项在分组中的排名, 排名相等会在名次中留下空位 1, 2, 3, 3, 5
+        select cookieid,createtime,pv,rank() over (partition by cookieid order by pv desc) as rn from test1;
+   dense_rank() 和rank的区别, 排名相等的不会在次序的字段中留下空位, 1, 2, 3, 3, 4
+        select cookieid,createtime,pv,dense_rank() over(partition by cookieid order by pv desc) as rn from test1; 
+   
 
 
 
