@@ -1,0 +1,7 @@
+hadoop 学习文档
+1, 集中压缩格式的比较
+    GZIP比Snappy和LZO占用更多CPU资源，但是提供了高压缩比。对于冷数据来说Gzip非常适合，因为访问频次低。Snappy及LZO适合经常访问的热数据。
+    BZip2的压缩比对一些文件的压缩比比GZIP还要高，但是需要压缩解压的时候需要更多的时间成本。HBase不支持Bzip2压缩。
+    Snappy通常优于LZO。值得你做一些测试来查看差异。
+    对于MapReduce,如果你希望你压缩的数据可以被分割，那么使用BZip2和LZO格式。Snappy和GZip块无法分割，不过,Snappy块里面的文件是SequenceFileor Avro格式就可以被分割。 Snappy最好用SequenceFiles或者Avro数据文件，如果直接用文本文件，因为无法分割的关系，MapReduce没法并行处理。HBase无所谓数据是否可以分割。
+    对于MapReduce,中间数据及输出数据均可以压缩。调整MapReduce参数即可，以下是压缩中间数据和输出的例子，第一个例子为MR2，后一个是MR1
