@@ -1,0 +1,5 @@
+docker 
+docker start mysql
+docker exec -it mysql bash
+mysql -uroot -p
+

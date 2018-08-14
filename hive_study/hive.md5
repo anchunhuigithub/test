@@ -76,18 +76,18 @@
 
 命令3:
    join 操作
-   inner join 内连接, 只用两张表都符合where条件才会作为结果显示 ,join 只支持等值连接 on后面的条件使用'=’
+   inner join 内连接, 只用在两张表都符合where条件才会作为结果显示 ,join 只支持等值连接 on后面的条件使用'=’
    select a.f1,a.f2,b.f2 from table1 a join table2 b on a.f1=b.f1
    
    *** 待定  todo
    left outer join  左外连接  左边的表的记录符合where条件的都显示, 对应的右边的表
 
+   union all
+   把表合并到一起操作
 
 
 
-
-
-#       hive 中array，map，struct字段类型的使用场景
+#   hive 中array，map，struct字段类型的使用场景
 	1，array
 	        以电影数据为列
 		数据维度
@@ -103,9 +103,9 @@
 		    zhuyan array<string>,
 		    year int,
 	  	    month int,
-	            shichang int,
-	            disnum int,
-	            score float
+            shichang int,
+	        disnum int,
+	        score float
 		)
 		comment "this table about movie's message"
 		row format delimited fields terminated by ","
