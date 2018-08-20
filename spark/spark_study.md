@@ -34,3 +34,16 @@ spark 学习笔记
         可以使用Object 进行实现
         Object 中的方法和变量就是静态的, 可以直接调用
     7,
+3,sortby
+    自定义比较器
+    场景: 按照第二个元素进行倒叙排列, 按照第一个元素进行正序排列,
+    val mysort=new Ordering[Tuple2[String,Int]]{
+        override def compare(x:(String,Int),y:(String,Int)):Int={
+            val r=x._2
+        }
+    }
+
+
+
+
+
