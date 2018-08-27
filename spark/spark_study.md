@@ -36,12 +36,25 @@ spark 学习笔记
     7,
 3,sortby
     自定义比较器
-    场景: 按照第二个元素进行倒叙排列, 按照第一个元素进行正序排列,
+    场景: 按照第二个元素进行倒叙排列,如果第二个元素相同, 按照第一个元素进行正序排列,
     val mysort=new Ordering[Tuple2[String,Int]]{
         override def compare(x:(String,Int),y:(String,Int)):Int={
-            val r=x._2
+            val r=x._2.compare(y._2)
+            val r2=x._1.compare(y._1)
+            if (r==0){
+              r2
+            }else{
+              -r
+            }
         }
     }
+    val repart_file_2=source.flatMap { line =>
+      val origin = line.split("\\|")
+      Array(origin(2), origin(6))
+    }.map(word => (word, 1)).reduceByKey(_ + _)
+      .sortBy(x => x)(mysortBy, ClassTag.apply[Tuple2[String, Int]](classOf[Tuple2[String, Int]]))
+      .repartition(1)
+      .saveAsTextFile("/home/an/add_count_1")
 
 
 
