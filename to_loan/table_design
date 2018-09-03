@@ -1,0 +1,12 @@
+用户身份证信息表的设计
+create table idcard(idnumber varchar(20),name varchar(50),sex varchar(8),
+nation varchar(10),birthday datetime,address varchar(60),issue varchar(50),
+validDateStart datetime comment '有效期开始时间',validDateEnd datetime comment '有效期结束时间',
+Verification int comment '姓名和身份证号码是否一直',
+facepath varchar(20),backpath varchar(20),incrid int 自增主键)
+
+# 人脸特征表
+create table facefeatures(facepicturepath varchar(20),)
+
+# 人脸和身份证上的图片人脸的相识度结果
+create table degreeOfAcquaintance (result double,idNumber varchar(20),)
