@@ -224,15 +224,74 @@
 	  1       ["A","C","B"]
 	  2       ["B","C","D"]
 	  3       ["B","C","D"]
-********************************************************************************优化************************************************
- 
+******************************************************************hive 的优化************************************************
+1: 
  设置hive本地模式运行
     set hive.exec.mode.local.auto=true
     有些语句就不会促发mapreduce执行, 比如selct * from table1;  select * from table where day=10 (分区表)
- 
+2: 
  尽量使用group by 进行分组操作, 效率高
+3: 
+ jvm重用 
+       可以在 hadoop 的mapred-side.xml 文件中进行设置   
+  <property>
+    <name>mapred.job.reuse.jvm.num.tasks</name>
+    <value>10</value>
+  </property>
+4:
+ 使用EXPLAIN 学习hive的工作原理，
+   使用方式为：
+	explain select sum(number) from oneclo;
+   查看hql 是如何转换为mapreduce的
+5：
+ 使用explain extended 显示更多的信息
+6：
+ 限制调整
+ limit 在很多情况下还是需要执行整个查看语句，然后返回部分结果的。
+ hive 提供了一个配置属性可以开启，当使用limit语句时，其可以对源数据进行抽样
+  <property>
+	<name>hive.limit.optimize.enable</name>
+	<value>true</value>
+  </property>
+  这个参数一旦打开，还有两个参数可以控制这个操作，分别为：hive.limit.row.max.size 和 hive.limit.optimize.limit.file
+  这个功能的一个缺点是有可能输入的有用的数据永远不会被处理到，例如像任意的一个需要reduce步骤的查询，join和group by 操作，
+     以及聚合函数的大多数调用，将会产生不同的结果。也许这个差异是可以接受的，但是重要的是要理解。
+7：
+ join 优化
+
+8:
+ 并行执行
+ hive 一次只会执行一个阶段，某个特定的job可能包含多个阶段，而这些阶段并非相互依赖，那么有些阶段是可以并行执行的，这样可以使得
+ 整个job的执行时间缩短，可以通过设置 hive.exec.parallel 为true ，开启并发执行。
+9：
+ 严格模式
+ 设置属性 hive.mapred.mode 的值为strict 可以禁止3种类型的查询
+ 第一种，对于分区表，除非where 语句中包含有分区字段作为过滤条件来限制数据范围，否着不容许执行，即，不容许扫描所有的分区
+ 第二种，对于使用了order by 语句的查询，要求必须使用limit进行限制
+ 第三种，限制笛卡尔积的查询  join 后面没有使用on 
+10：
+ 调整mapper和reducer个数
+ 保持平衡性非常有必要，如果有太多的mapper和reducer 任务，就会导致启动阶段调度和运行job过程中产生过多的开销，如果设置的太少，
+ 那么就有可能没有充分利用好集群内在的并行性。
+       当执行的hive查询具有reduce 过程时，cli控制台会显示出优化后的reduces的个数，比如group by 操作，这种操作总是需要执行reduce  过程，
+ hive 是按照输入的数据量的大小确定reducer 个数的，可以通过 dfs -count filepath 来计算出制定目录下的所有数据的总大小
+ 属性 hive.exec.reducers.bytes.per.reducer 默认值为1GB，一般情况下默认值是比较合适的，有些情况下map阶段产生的数据量过多，同样map
+ 阶段也可能会过滤掉输入数据集中的很大一部分的数据，而这时可能需要少量的reducer就满足了，可以通过设置mapred.reduce.tasks 为不同
+ 的值来确定是使用较多的还是较少的reducer，需要记住，受外部因素影响，这样的值会比较复杂设置，hadoop需要消耗好几秒的时间进行启动和 调度map和reduce任务，在进行性能测试的时候，要考虑到这些因素。
+ 属性 hive.exec.reducers.max 可以阻止某个查询消耗太多的资源 （集群总reducers 槽位个数*1.5）/（执行中查询的平均个数）
+ 1.5 是一个经验系数 
+11:
+ 索引
+    索引可以用来加快含有group by 语句的查询的计算速度。
+12：
+ 动态分区调整
+13：
+ 推测执行
+14：
+ 单个mapreduce 中多个group by
+15：
+ 虚拟列
  
- jvm重用
 
  http://lxw1234.com/archives/2016/04/632.htm
  orc 索引row group index vs bloom filter index
