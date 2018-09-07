@@ -11,5 +11,5 @@ gzip 和 gunzip
    -r 递归压缩文件, 将文件夹下的文件以及目录一起处理
 gunzip 
    用来解压缩文件. 用于解压被gzip压缩过的文件, 实际上gunzip就算gzip的硬连接
-linux 禁止外网ping 设置
-    
+linux 禁止外网ping 设置 
+   
