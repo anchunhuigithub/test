@@ -1,7 +1,7 @@
 spark 学习笔记
 1, spark version 1.6.2   scala version 2.10.5
-    exakple:
-        wordcount 
+    example:
+        wordcount sc.textFile("path").flatMap(line=>line.split(" ")).map((_,1)).reduceByKey(_+_).sortBy(_.2,false).saveAsTextFile("path") 
 2,scala 语法总结
     1,scala 变量
     2,if while 
@@ -55,8 +55,37 @@ spark 学习笔记
       .sortBy(x => x)(mysortBy, ClassTag.apply[Tuple2[String, Int]](classOf[Tuple2[String, Int]]))
       .repartition(1)
       .saveAsTextFile("/home/an/add_count_1")
+4,算子的学习
+	file=sc.textFile("path")
+	4.1 file.count() 得到rdd的行数
+	    file.filter(line=>line.contains("Apache")).count() 对rdd进行过滤操作，每一行包含Apache的过滤出来，然后进行统计操作
+	4.2 
 
 
 
+5,spark-submit 提交
 
+    spark scala 代码进行打包的方法
+    更改pom.xml 文件中的plugin 中的mainClass 改为要执行的main的类名称，点击maven project 中的lifeCycle 中的clean 和package 然后点击run maven build进行打包即可
 
+    spark 官网案例
+    url http://spark.apache.org/docs/2.3.1/submitting-applications.html
+    local 
+	spark-submit --class org.apache.Main \
+	--master local[3]
+	jarpath
+	param1 param2
+
+6,概念理解
+	driver program，cluster manager，work,executors,tasks,sparkcontext,sparksession
+7,RDD 学习
+   resilient distributed datasets
+   spark program flow whit an rdd includes:
+	1,creation of an RDD from a data source.
+        2,A set of transformations, for example, filter , map , join , and so on.
+	3,Persisting the RDD to avoid re-execution.
+	4,Calling actions on the RDD to start performing parallel operations across the cluster.
+    创建RDD：
+	sc.parallelize(1 to 20) 不经常在生产环境下使用，因为要求这个数据集在单个节点上可用
+	action：count()
+	transformation： map,flatMap,
