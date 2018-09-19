@@ -20,6 +20,9 @@ hadoop 学习文档
     5, 配置hadoop配置文件
         集群规划    nn1,nn2 作为namenode ha 存在
                     nn3,nn4,nn5 作为datanode 配置namenode 故障自动转移
+                    nn1,nn2,nn3,nn4,nn5 都作为zookeeper节点
+                    nn3,nn4,nn5 作为journalnode
+                    nn2 作为resourcemanager
         配置文件
         core-site.xml 
             <!-- 指定hdfs的nameservice为ns -->
