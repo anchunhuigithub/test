@@ -170,4 +170,5 @@ hadoop 学习文档
             2, http://f.dataguru.cn/hadoop-707122-1-1.html 缺少ssh相关的工具
             3, hdfs-site.xml 配置文件中的集群名称和下面的配置要一致
 
-
+    Hadoop配置了HA，Spark也需要更改一些配置，否则会报java.net.UnknownHostException的错误，就是在$SPARK_HOME/conf/spark-defaults.conf内添加如下内容：
+        spark.files file:///data/install/hadoop-2.7.3/etc/hadoop/hdfs-site.xml,file:///data/install/hadoop-2.7.3/etc/hadoop/core-site.xml
