@@ -5,3 +5,169 @@ hadoop 学习文档
     Snappy通常优于LZO。值得你做一些测试来查看差异。
     对于MapReduce,如果你希望你压缩的数据可以被分割，那么使用BZip2和LZO格式。Snappy和GZip块无法分割，不过,Snappy块里面的文件是SequenceFileor Avro格式就可以被分割。 Snappy最好用SequenceFiles或者Avro数据文件，如果直接用文本文件，因为无法分割的关系，MapReduce没法并行处理。HBase无所谓数据是否可以分割。
     对于MapReduce,中间数据及输出数据均可以压缩。调整MapReduce参数即可，以下是压缩中间数据和输出的例子，第一个例子为MR2，后一个是MR1
+2,hadoop 集群安装步骤记录
+    参考: https://blog.csdn.net/qymufeng/article/details/80846209
+    1, centos 系统上安装 vm player 
+        创建虚拟机, 制定iso 创建一个centos虚拟机 配置好jdk, hostname
+    2, 复制四分文件 配置网络使用nat 模式  使用这个  vmnet8: 网段的ip地址
+    3, 配置ssh免密钥登陆
+        设置 .ssh 目录权限 chmod 700 
+        设置这个目录下的文件权限为 chmod 600 
+    4, 时间同步工具
+    5, rsync 同步文件
+    4, 配置环境变量
+        在 /etc/profile 中添加 JAVA_HOME 和 HADOOP_HOME 
+    5, 配置hadoop配置文件
+        集群规划    nn1,nn2 作为namenode ha 存在
+                    nn3,nn4,nn5 作为datanode 配置namenode 故障自动转移
+        配置文件
+        core-site.xml 
+            <!-- 指定hdfs的nameservice为ns -->
+            <property>
+                <name>fs.defaultFS</name>
+                <value>hdfs://ns</value>
+            </property>
+            <!--指定hadoop数据临时存放目录-->
+            <property>
+                <name>hadoop.tmp.dir</name>
+                <value>/data/install/hadoop-2.7.3/temp</value>
+            </property>
+            <property>
+                <name>io.file.buffer.size</name>
+                <value>4096</value>
+            </property>
+            <!--指定zookeeper地址-->
+            <property>
+                <name>ha.zookeeper.quorum</name>
+                <value>master1:2181,master2:2181,slave1:2181,slave2:2181,slave3:2181</value>
+            </property>
+        hdfs-site.xml
+            <!--指定hdfs的nameservice为ns，需要和core-site.xml中的保持一致 -->
+            <property>
+                <name>dfs.nameservices</name>
+                <value>ns</value>
+            </property>
+            <!-- ns下面有两个NameNode，分别是nn1，nn2 -->
+            <property>
+                <name>dfs.ha.namenodes.ns</name>
+                <value>nn1,nn2</value>
+            </property>
+            <!-- nn1的RPC通信地址 -->
+            <property>
+                <name>dfs.namenode.rpc-address.ns.nn1</name>
+                <value>master1:9000</value>
+            </property>
+            <!-- nn1的http通信地址 -->
+            <property>
+                <name>dfs.namenode.http-address.ns.nn1</name>
+                <value>master1:50070</value>
+            </property>
+            <!-- nn2的RPC通信地址 -->
+            <property>
+                <name>dfs.namenode.rpc-address.ns.nn2</name>
+                <value>master2:9000</value>
+            </property>
+            <!-- nn2的http通信地址 -->
+            <property>
+                <name>dfs.namenode.http-address.ns.nn2</name>
+                <value>master2:50070</value>
+            </property>
+            <!-- 指定NameNode的元数据在JournalNode上的存放位置 -->
+            <property>
+                <name>dfs.namenode.shared.edits.dir</name>
+                <value>qjournal://slave1:8485;slave2:8485;slave3:8485/ns</value>
+            </property>
+            <!-- 指定JournalNode在本地磁盘存放数据的位置 -->
+            <property>
+                <name>dfs.journalnode.edits.dir</name>
+                <value>/data/install/hadoop-2.7.3/journal</value>
+            </property>
+            <!-- 开启NameNode故障时自动切换 -->
+            <property>
+                <name>dfs.ha.automatic-failover.enabled</name>
+                <value>true</value>
+            </property>
+            <!-- 配置失败自动切换实现方式 -->
+            <property>
+                <name>dfs.client.failover.proxy.provider.ns</name>
+                <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+            </property>
+            <!-- 配置隔离机制，如果ssh是默认22端口，value直接写sshfence即可 -->
+            <property>
+                <name>dfs.ha.fencing.methods</name>
+                <value>sshfence(hadoop:22022)</value>
+            </property>
+            <!-- 使用隔离机制时需要ssh免登陆 -->
+            <property>
+                <name>dfs.ha.fencing.ssh.private-key-files</name>
+                <value>/home/hadoop/.ssh/id_rsa</value>
+            </property>
+
+            <property>
+                <name>dfs.namenode.name.dir</name>
+                <value>file:/data/install/hadoop-2.7.3/hdfs/name</value>
+            </property>
+
+            <property>
+                <name>dfs.datanode.data.dir</name>
+                <value>file:/data/install/hadoop-2.7.3/hdfs/data</value>
+            </property>
+
+            <property>
+                <name>dfs.replication</name>
+                <value>2</value>
+            </property>
+            <!-- 在NN和DN上开启WebHDFS (REST API)功能,不是必须 -->
+            <property>
+                <name>dfs.webhdfs.enabled</name>
+                <value>true</value>
+            </property>
+        mapred-site.xml
+            <property>
+                <name>mapreduce.framework.name</name>
+                <value>yarn</value>
+            </property>
+        yarn-site.xml
+            <!-- 指定nodemanager启动时加载server的方式为shuffle server -->
+            <property>
+                    <name>yarn.nodemanager.aux-services</name>
+                    <value>mapreduce_shuffle</value>
+            </property>
+            <property>
+                    <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+                    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+            </property>
+            <!-- 指定resourcemanager地址 -->
+            <property>
+                    <name>yarn.resourcemanager.hostname</name>
+                    <value>master1</value>
+            </property>
+        hadoop-env.sh
+            export JAVA_HOME
+            export HADOOP_SSH_OPTS="-p 22022"
+        yarn-env.sh
+            export JAVA_HOME
+        启动命令
+            首次启动命令
+                启动zookeeper bin/zkServer.sh start
+                在一个namenode节点上进行创建命名空间
+                    bin/hdfs zkfc -formatZK 
+                在每一个journalnode节点上启动journalnode
+                    sbin/hadoop-daemon.sh start journalnode
+                在主namenode节点上格式化namemode和journalnode
+                    bin/hdfs namenode -format ns
+                在主namenode上启动namenode
+                    sbin/hadoop-daemon.sh start namenode
+                在备用namenode节点上执行 bin/hdfs namenode -bootstrapStandby 格式化备用namenode节点, 并把元数据从主namenode copy到备用节点上, 不会再次格式化journalnode节点, 然后启动备用namenode节点
+                    sbin/hadoop-daemon.sh start namenode
+                在两个namenode上都执行sbin/hadoop-daemon.sh start zkfc
+                在所有的datanode上启动 sbin/hadoop-daemon.sh start datanode
+            日常启动停止命令
+                sbin/start-dfs.sh
+                sbin/stop-dfs.sh
+        错误总结；
+            1, hostname 中不要出现_ space等一场字符
+            2, http://f.dataguru.cn/hadoop-707122-1-1.html 缺少ssh相关的工具
+            3, hdfs-site.xml 配置文件中的集群名称和下面的配置要一致
+
+
