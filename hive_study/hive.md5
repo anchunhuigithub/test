@@ -1,4 +1,18 @@
                                                        hive study file
+
+0,hive 安装 
+    基本步骤很简单, 配置元数据存放路径为mysql
+
+    ref: https://www.cnblogs.com/kinginme/p/7233315.html
+        http://www.cnblogs.com/kinginme/p/7249533.html
+    1, mysql 设置访问权限的bind 路径 /etc/mysql/mysql.conf.d (ubuntu) 
+    2, 添加新的用户 hadoop 
+        CREATE USER  'hadoop'@'%'  IDENTIFIED BY 'mysql';
+        GRANT ALL PRIVILEGES ON  *.* TO 'hadoop'@'%' WITH GRANT OPTION;
+        flush privileges;
+    3,原来Hive2需要hive元数据库初始化
+    schematool -dbType mysql -initSchema
+
 1,version 1
     常用命令: 
         set hive.cli.print.current.db=true  设置出 cli的db名称
