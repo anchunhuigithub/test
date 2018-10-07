@@ -21,3 +21,17 @@ redis 超时时间设置
      可以对一个已经具有生存时间的key使用expire命令重新制定生存时间. 
      ttl key 查看key的剩余生存时间, 返回-2 表示不存在key 返回-1 表示剩余时间不足
 redis学习网站:      http://www.redis.net.cn/order/3685.html
+redis 数据结构
+     string: 最基本的数据结构  get<key> set<key> <value>
+     list: 双向连表 lpush/rpush <key> <value1> <value2> 从左边或者右侧插入数据 lpop/rpop 从左边或者右侧推出一个zhi. 
+     set: 不重复, 一个key, 多个value. 
+     zset: score 有序
+     hash: key field value一个key包含了多个field和value 效率高 o(1)
+redis 事务 
+    事务是一个单独的隔离操作：事务中的所有命令都会序列化、按顺序地执行。事务在执行的过程中，不会被其他客户端发送来的命令请求所打断。
+    Redis事务的主要作用就是串联多个命令防止别的命令插队
+    从输入Multi命令开始，输入的命令都会依次进入命令队列中，但不会执行，至到输入Exec后，Redis会将之前的命令队列中的命令依次执行。
+    组队的过程中可以通过discard来放弃组队。
+    如果组队中某个命令出现了报告错误，执行时整个队列中所有命令都会被取消。
+    如果执行中某个命令出现了报告错误，则只有报错的命令不会被执行，而其他的命令都会执行，不会回滚。
+

@@ -18,7 +18,12 @@
         set hive.cli.print.current.db=true  设置出 cli的db名称
         set hive.cli.print.header=true   设置 cli的  查询结果显示出列名称
         create database databasename;      创建数据库
-        create table tablename (filename type,filename1 type)j;      创建表
+        create table tablename (filename type,filename1 type);      创建表
+        创建内部表
+        create table tablename(id int comment '',name string comment '')comment '' row format delimited fields terminated by "|" stored as TEXTFILE
+        创建外部分区表
+        create external table tablename(id int comment '',name string comment '')partitioned by (yyyymmdd string) row format delimited fields terminated by "|" stored as TEXTFILE location '/user/hive/warehouse/dataname/20181220'
+        创建外部表 指定分区字段, 字段分割符号, 存储格式, 存放路径
     显示分区: 
         show partitions tablename;
     添加分区: 
@@ -65,28 +70,31 @@
   
     表的重新命名: 
        ALTER TABLE iteblog RENAME TO new_table_name
+    加载数据到表中
+       load data [local] inpath 'somepath' overwrite into table table_name partition (country='somevalue',state='somevalue');
+
 
 命令2:
 # 动态分区和静态分区
    静态分区:  一次导入到一个分区, 如果对应文件夹没有创建, 自动创建. 
    insert into table table_1 partition (year=2018,month=08,day=08) select * from table2 where year=2018 and month =08 and day =08
-    静态分区一次导入到多个分区
-    from table1 
-    insert into table table2 partition (year=2018,month=08,day=08)
-    select * where year=2018 and month=08 and day =08
-    insert into table table2 partition (year=2018,month=08,day=09)
-    select * where year=2018 and month=08 and day=09
-   
+   静态分区一次导入到多个分区
+        from table1 
+        insert into table table2 partition (year=2018,month=08,day=08)
+        select * where year=2018 and month=08 and day =08
+        insert into table table2 partition (year=2018,month=08,day=09)
+        select * where year=2018 and month=08 and day=09
+       
    动态分区:
-   动态分区默认是关闭的, 需要手动打开 容许动态分区, 容许所有列作为动态分区字段. hive.exec.dynamic.partition.mode 设置为nostrict
-   根据字段自动创建分区,根据查询结果的后三位进行动态分区. 
-   insert into table table2 partition(year,month,day) select * from t3.name,t3.age,.....,t3.year,t3.mohth,t3.day from table3 t3
-   动态分区一次插入多张表中 from 字段放到前面可以插入到多张表中:  动态分区和静态分区结合使用 
-   from table1
-   insert into table table2 partition (year,month,day)
-   select name,age,year,month,day
-   insert into table table3 partition (year=2018,month=08,day)
-   select name,age,year,month,day where table1.year=2018,month=08
+       动态分区默认是关闭的, 需要手动打开 容许动态分区, 容许所有列作为动态分区字段. hive.exec.dynamic.partition.mode 设置为nostrict
+       根据字段自动创建分区,根据查询结果的后三位进行动态分区. 
+       insert into table table2 partition(year,month,day) select * from t3.name,t3.age,.....,t3.year,t3.mohth,t3.day from table3 t3
+       动态分区一次插入多张表中 from 字段放到前面可以插入到多张表中:  动态分区和静态分区结合使用 
+       from table1
+       insert into table table2 partition (year,month,day)
+       select name,age,year,month,day
+       insert into table table3 partition (year=2018,month=08,day)
+       select name,age,year,month,day where table1.year=2018,month=08
 
 命令3:
    join 操作
@@ -231,13 +239,62 @@
 		2       D
 		3       B
 		3       C
-		3	d
+		3	    d
 	
 	 select id,collect_set(name) from test group by id;
 	  
 	  1       ["A","C","B"]
 	  2       ["B","C","D"]
 	  3       ["B","C","D"]
+    5,nvl 使用
+       数据结构为
+       A表: 
+       id   name    age
+       1    zhangsan    27
+       2    lisi    28
+       3    xiaoming    29
+       5    sunchang    32
+       6    lisi    29
+       B表: 
+       id   name    income
+       2    lisi    5000
+       3    xiaoming    4000
+       4    wanghong    5000
+       5    sunchang    0
+       结果表结构为
+       1    zhangsan    27  0
+       2    lisi    28  5000
+       3    xiaoming    29  4000
+       4    wanghong    null    5000
+       5    sunshang    32  0
+       6    lisi    29  0
+       方案1: 
+        select a.id,a.name,a.age,nvl(b.income,0) from a left join b on a.id=b.id and a.name=b.name union all 
+        select b.id,b.name,a.age,nvl(b.income,0) from b left join a on a.id=b.id and a.name=b.name where a.name is null
+       方案2: 
+        select nvl(a.id,b.id),nvl(a.name,b.name) ,a.age ,nvl(b.income,0) from a full join b on a.id=b.id and a.name=b.name
+    6,explode 使用
+        数据格式为: 
+        start_day col1 col2 col3 col4 
+        1991    1.1 1.2 1.3 1.4
+        1992    2.1 2.2 2.3 2.4
+        结果表: 
+        1991    1   1.1
+        1991    2   1.2
+        1991    3   1.3
+        1991    4   1.4
+        1992    1   2.1
+        1992    2   2.2
+        1992    3   2.3
+        1993    4   2.4
+        方案
+        select start_day,ss,rank() over(partition by start_day order by ss) from c lateral view explode(split(concat_ws(",",col1,col2,col3,col4),",")) b as ss
+        lateral view explode 是一个udtf
+        split('','')
+        concat_ws('','')
+
+
+
 ******************************************************************hive 的优化************************************************
 1: 
  设置hive本地模式运行
@@ -371,7 +428,7 @@
    引用文献: http://lxw1234.com/archives/2015/04/181.htm  
              http://lxw1234.com/archives/2015/04/176.htm window 子句: 
     
-   数据的准备和下面的一样: 
+   1,数据的准备和下面的一样: 
     SELECT cookieid,
     createtime,
     pv,
@@ -452,7 +509,6 @@
    dense_rank() 和rank的区别, 排名相等的不会在次序的字段中留下空位, 1, 2, 3, 3, 4
         select cookieid,createtime,pv,dense_rank() over(partition by cookieid order by pv desc) as rn from test1; 
    
-
 
 
 

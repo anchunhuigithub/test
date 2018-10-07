@@ -817,5 +817,12 @@ hadoop 学习文档
         消耗NameNode大量的内存
         延长MapReduce作业的总运行时间
     本文将介绍如何在MapReduce作业层面上将大量的小文件合并，以此减少运行作业的Map Task的数量；关于如何在HDFS上合并这些小文件，请参见《Hadoop小文件优化》。
-    Hadoop内置提供了一个 CombineFileInputFormat 类来专门处理小文件，其核心思想是：根据一定的规则，将HDFS上多个小文件合并到一个 InputSplit中，然后会启用一个Map来处理这里面的文件，以此减少MR整体作业的运行时间。
-7,
+    Hadoop内置提供了一个 CombineFileInputFormat 类来专门处理小文件，其核心思想是：根据一定的规则，将HDFS上多个小文件合并到一个 InputSplit中，
+    然后会启用一个Map来处理这里面的文件，以此减少MR整体作业的运行时间。
+7,小文件优化
+    mapreduce jvm 重用
+        hadoop中有一些特性可以用来减轻这种问题：可以在一个JVM中允许task reuse，以支持在一个JVM中运行多个map task，
+        以此来减少一些JVM的启动消耗(通过设置mapred.job.reuse.jvm.num.tasks属性，默认为1，－1为无限制)。
+        另一种方法为使用MultiFileInputSplit，它可以使得一个map中能够处理多个split。
+    https://www.iteblog.com/archives/978.html
+8,
