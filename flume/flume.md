@@ -77,5 +77,7 @@
        使用该代码编译后替换掉flume-ng-kafka-sink-1.6.0.jar中的KafkaSink.class，重启Flume Agent之后，问题解决。
 4,    利用Flume拦截器（interceptors）实现Kafka Sink的自定义规则多分区写入
         ref  http://lxw1234.com/archives/2015/11/547.htm
+        需要指定 kafka sink 的自定义partitioner 如何自定义参考kafka文档
+
 
 
